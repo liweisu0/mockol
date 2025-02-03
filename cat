@@ -1,8 +1,0 @@
-total 12
-drwxr-xr-x 1 me me  64 Jan 31 22:28 .
-drwxr-xr-x 1 me me 116 Jan 31 22:20 ..
--rw-r--r-- 1 me me   0 Jan 31 22:28 cat
--rwxr-xr-x 1 me me  67 Jan 31 22:24 conv.sh
-drwxr-xr-x 1 me me 122 Jan 31 22:20 .git
--rw-r--r-- 1 me me 154 Jan 31 22:25 index.html
--rw-r--r-- 1 me me 119 Jan 31 22:23 index.md
