@@ -9,13 +9,21 @@
 
 <body>
     <script>
+        //Define a mock file system
+        const fileSystem = [
+            'documents/',
+            'images/',
+            'blog.txt',
+            'readme.md',
+            'config.json'
+        ];
+
         $('body').terminal({
-            hello: function (what) {
-                this.echo('Hello, ' + what +
-                    '. Wellcome to System of Ruina.');
+            ls: function() {
+                this.echo(fileSystem.join('\n'));
             }
         }, {
-            greetings: 'I\' Liwei Su, the root user here.'
+            greetings: 'I\'m Liwei Su, the root user here.'
         });
     </script>
 </body>
