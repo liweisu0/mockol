@@ -7,35 +7,86 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery.terminal/css/jquery.terminal.min.css" />
     <style>
         .terminal {
-            --size: 2.0;
+            --size: 1.4;
         }
     </style>
 </head>
 
 <body>
     <script>
-        //Define a mock file system
+        // Define a mock file system with nested structure
         const fileSystem = {
             'README.md': 'May you find your blog in this place.',
             'config.json': '{"version": "1.0.0"}',
-            'blog/Why_My_English_Seems_Good.md': 'Why_My_English_Seems_Good.md',
+            'blog/': {
+                'first-post.md': 'This is my first blog post',
+                'second-post.md': 'This is my second blog post'
+            }
         };
+
+        // Track current directory path
+        let currentPath = '/';
+
+        // Helper function to get current directory contents
+        function getCurrentDirectory() {
+            let current = fileSystem;
+            if (currentPath !== '/') {
+                const dirs = currentPath.split('/').filter(Boolean);
+                for (const dir of dirs) {
+                    current = current[dir + '/'];
+                }
+            }
+            return current;
+        }
 
         $('body').terminal({
             ls: function() {
-                this.echo(Object.keys(fileSystem).join('\n'));
+                const current = getCurrentDirectory();
+                this.echo(Object.keys(current).join('\n'));
+            },
+            cd: function(path) {
+                if (!path || path === '/') {
+                    currentPath = '/';
+                    return;
+                }
+                
+                if (path === '..') {
+                    if (currentPath !== '/') {
+                        currentPath = '/' + currentPath.split('/').filter(Boolean).slice(0, -1).join('/');
+                        if (currentPath !== '/') currentPath += '/';
+                    }
+                    return;
+                }
+
+                const normalizedPath = path.endsWith('/') ? path : path + '/';
+                const current = getCurrentDirectory();
+                
+                if (normalizedPath in current) {
+                    if (typeof current[normalizedPath] === 'object') {
+                        currentPath = currentPath === '/' ? '/' + path : currentPath + path;
+                        if (!currentPath.endsWith('/')) currentPath += '/';
+                    } else {
+                        this.echo('Not a directory');
+                    }
+                } else {
+                    this.echo('No such directory');
+                }
             },
             cat: function(filename) {
-                if (filename in fileSystem) {
-                    if (fileSystem[filename] === null) {
+                const current = getCurrentDirectory();
+                if (filename in current) {
+                    if (typeof current[filename] === 'object') {
                         this.echo('Is a directory');
                     } else {
-                        this.echo(fileSystem[filename]);
+                        this.echo(current[filename]);
                     }
                 } else {
                     this.echo('No such file or directory');
+                }
+            },
+            pwd: function() {
+                this.echo(currentPath);
             }
-        }
         }, {
             greetings: 'I\'m Liwei Su, the root user here.'
         });
