@@ -10,18 +10,29 @@
 <body>
     <script>
         //Define a mock file system
-        const fileSystem = [
-            'documents/',
-            'images/',
-            'blog.txt',
-            'readme.md',
-            'config.json'
-        ];
+        const fileSystem = {
+            'documents/': null,
+            'images/': null,
+            'blog.txt': 'Welcome to my blog!',
+            'readme.md': 'This is a readme file',
+            'config.json': '{"version": "1.0.0"}'
+        };
 
         $('body').terminal({
             ls: function() {
                 this.echo(fileSystem.join('\n'));
+            },
+            cat: function(filename) {
+                if (filename in fileSystem) {
+                    if (fileSystem[filename] === null) {
+                        this.echo('Is a directory');
+                    } else {
+                        this.echo(fileSystem[filename]);
+                    }
+                } else {
+                    this.echo('No such file or directory');
             }
+        }
         }, {
             greetings: 'I\'m Liwei Su, the root user here.'
         });
