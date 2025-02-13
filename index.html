@@ -20,7 +20,7 @@
 
         $('body').terminal({
             ls: function() {
-                this.echo(fileSystem.join('\n'));
+                this.echo(Object.keys(fileSystem).join('\n'));
             },
             cat: function(filename) {
                 if (filename in fileSystem) {
