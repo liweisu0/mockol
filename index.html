@@ -231,15 +231,7 @@
                 }
             }
         }, {
-            greetings: 'Welcome to this playground, you can do anything here. The root password is 1011. \
-            You can edit the file system by using the ed command. \
-            You can rename the file by using the mv command. \
-            You can delete the file by using the rm command. \
-            You can create a new directory by using the mkdir command. \
-            You can delete a directory by using the rmdir command. \
-            You can switch to root user by using the su command. \
-            You can logout from root user by using the exit command. \
-            ',
+            greetings: 'Welcome to this playground, you can do anything here. \n\n',
             completion: function(string, callback) {
                 const current = getCurrentDirectory();
                 const commands = Object.keys(current);
