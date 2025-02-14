@@ -15,7 +15,7 @@
 <body>
     <script>
         // Define a mock file system with nested structure
-        const fileSystem = {
+        const defaultFileSystem = {
             'README.md': 'May you find your blog in this place.',
             'config.json': '{"version": "1.0.0"}',
             'blog/': {
@@ -23,6 +23,9 @@
                 'second-post.md': 'This is my second blog post'
             }
         };
+
+        // Load file system from localStorage or use default
+        const fileSystem = JSON.parse(localStorage.getItem('fileSystem')) || defaultFileSystem;
 
         // Track current directory path
         let currentPath = '/';
@@ -40,6 +43,11 @@
                 }
             }
             return current;
+        }
+
+        // Save file system to localStorage
+        function saveFileSystem() {
+            localStorage.setItem('fileSystem', JSON.stringify(fileSystem));
         }
 
         $('body').terminal({
@@ -92,7 +100,7 @@
             },
             su: function() {
                 this.push(function(password) {
-                    if (password === 'your_password_here') {
+                    if (password === '1011') {
                         isRoot = true;
                         this.echo('Switched to root user');
                     } else {
@@ -109,6 +117,32 @@
                     this.echo('Logged out from root user');
                 } else {
                     this.echo('Not in root mode');
+                }
+            },
+            ed: function(filename) {
+                if (!isRoot) {
+                    this.echo('Permission denied: You must be root to edit files.');
+                    return;
+                }
+
+                const current = getCurrentDirectory();
+                if (filename in current) {
+                    if (typeof current[filename] === 'object') {
+                        this.echo('Cannot edit a directory');
+                    } else {
+                        this.push(function(content) {
+                            current[filename] = content;
+                            saveFileSystem(); // Save changes to localStorage
+                            this.echo(`File ${filename} updated.`);
+                            this.pop();
+                        }, {
+                            prompt: `Editing ${filename}: `,
+                            name: 'editor'
+                        });
+                        this.echo(current[filename]);
+                    }
+                } else {
+                    this.echo('No such file');
                 }
             }
         }, {
