@@ -27,6 +27,9 @@
         // Track current directory path
         let currentPath = '/';
 
+        // Track user mode
+        let isRoot = false;
+
         // Helper function to get current directory contents
         function getCurrentDirectory() {
             let current = fileSystem;
@@ -86,6 +89,27 @@
             },
             pwd: function() {
                 this.echo(currentPath);
+            },
+            su: function() {
+                this.push(function(password) {
+                    if (password === 'your_password_here') {
+                        isRoot = true;
+                        this.echo('Switched to root user');
+                    } else {
+                        this.echo('Incorrect password');
+                    }
+                    this.pop();
+                }, {
+                    prompt: 'Password: '
+                });
+            },
+            logout: function() {
+                if (isRoot) {
+                    isRoot = false;
+                    this.echo('Logged out from root user');
+                } else {
+                    this.echo('Not in root mode');
+                }
             }
         }, {
             greetings: 'I\'m Liwei Su, the root user here.'
