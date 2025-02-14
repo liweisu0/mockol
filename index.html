@@ -111,7 +111,7 @@
                     prompt: 'Password: '
                 });
             },
-            logout: function() {
+            exit: function() {
                 if (isRoot) {
                     isRoot = false;
                     this.echo('Logged out from root user');
@@ -136,17 +136,108 @@
                             this.echo(`File ${filename} updated.`);
                             this.pop();
                         }, {
-                            prompt: `Editing ${filename}: `,
+                            prompt: `Editing ${filename}: ` + '\n',
                             name: 'editor'
                         });
-                        this.echo(current[filename]);
+                        this.echo(current[filename]); // Add a newline before displaying content
+                    }
+                } else {
+                    // Create a new file and start editing
+                    this.push(function(content) {
+                        current[filename] = content;
+                        saveFileSystem(); // Save changes to localStorage
+                        this.echo(`File ${filename} created and updated.`);
+                        this.pop();
+                    }, {
+                        prompt: `Creating and editing ${filename}: ` + '\n',
+                        name: 'editor'
+                    });
+                    this.echo(`\nNew file ${filename} created. Start editing:`);
+                }
+            },
+            mv: function(oldName, newName) {
+                if (!isRoot) {
+                    this.echo('Permission denied: You must be root to rename files.');
+                    return;
+                }
+
+                const current = getCurrentDirectory();
+                if (oldName in current) {
+                    if (typeof current[oldName] === 'object') {
+                        this.echo('Cannot rename a directory');
+                    } else {
+                        current[newName] = current[oldName];
+                        delete current[oldName];
+                        saveFileSystem(); // Save changes to localStorage
+                        this.echo(`File ${oldName} renamed to ${newName}.`);
                     }
                 } else {
                     this.echo('No such file');
                 }
+            },
+            rm: function(filename) {
+                if (!isRoot) {
+                    this.echo('Permission denied: You must be root to delete files.');
+                    return;
+                }
+
+                const current = getCurrentDirectory();
+                if (filename in current) {
+                    if (typeof current[filename] === 'object') {
+                        this.echo('Cannot delete a directory with rm. Use rmdir instead.');
+                    } else {
+                        delete current[filename];
+                        saveFileSystem(); // Save changes to localStorage
+                        this.echo(`File ${filename} deleted.`);
+                    }
+                } else {
+                    this.echo('No such file');
+                }
+            },
+            rmdir: function(dirname) {
+                if (!isRoot) {
+                    this.echo('Permission denied: You must be root to delete directories.');
+                    return;
+                }
+
+                const current = getCurrentDirectory();
+                const normalizedDirname = dirname.endsWith('/') ? dirname : dirname + '/';
+                if (normalizedDirname in current) {
+                    if (typeof current[normalizedDirname] === 'object') {
+                        delete current[normalizedDirname];
+                        saveFileSystem(); // Save changes to localStorage
+                        this.echo(`Directory ${dirname} deleted.`);
+                    } else {
+                        this.echo('Not a directory');
+                    }
+                } else {
+                    this.echo('No such directory');
+                }
+            },
+            mkdir: function(dirname) {
+                if (!isRoot) {
+                    this.echo('Permission denied: You must be root to create directories.');
+                    return;
+                }
+
+                const current = getCurrentDirectory();
+                const normalizedDirname = dirname.endsWith('/') ? dirname : dirname + '/';
+                if (normalizedDirname in current) {
+                    this.echo('Directory already exists');
+                } else {
+                    current[normalizedDirname] = {};
+                    saveFileSystem(); // Save changes to localStorage
+                    this.echo(`Directory ${dirname} created.`);
+                }
             }
         }, {
-            greetings: 'I\'m Liwei Su, the root user here.'
+            greetings: 'I\'m Liwei Su, the root user here.',
+            completion: function(string, callback) {
+                const current = getCurrentDirectory();
+                const commands = Object.keys(current);
+                const matches = commands.filter(command => command.startsWith(string));
+                callback(matches);
+            }
         });
     </script>
 </body>
