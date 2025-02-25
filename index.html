@@ -8,6 +8,15 @@
     <style>
         .terminal {
             --size: 1.4;
+            --color: #98d1ce;
+            --background: #1a1b26;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background: #1a1b26;
         }
     </style>
 </head>
@@ -16,11 +25,21 @@
     <script>
         // Define a mock file system with nested structure
         const defaultFileSystem = {
-            'README.md': 'May you find your joy in this place.',
-            'config.json': '{"version": "1.0.0"}',
-            'blog/': {
-                'first-post.md': 'This is my first blog post',
-                'second-post.md': 'This is my second blog post'
+            'README.md': '# Welcome to Mockol\nA terminal playground for learning Linux commands.',
+            'etc/': {
+                'passwd': 'root:x:0:0:root:/root:/bin/bash\nuser:x:1000:1000::/home/user:/bin/bash',
+                'hostname': 'archbox'
+            },
+            'home/': {
+                'user/': {
+                    'documents/': {
+                        'notes.txt': 'My personal notes'
+                    },
+                    '.bashrc': '# ~/.bashrc'
+                }
+            },
+            'root/': {
+                '.bashrc': '# Root\'s bashrc file'
             }
         };
 
@@ -32,6 +51,10 @@
 
         // Track user mode
         let isRoot = false;
+
+        // Add these variables near the top
+        let username = 'user';
+        const hostname = 'archbox';
 
         // Helper function to get current directory contents
         function getCurrentDirectory() {
@@ -100,20 +123,23 @@
             },
             su: function() {
                 this.push(function(password) {
-                    if (password === '1011') {
+                    if (password === '123456') {
                         isRoot = true;
+                        username = 'root';
                         this.echo('Switched to root user');
                     } else {
-                        this.echo('Incorrect password');
+                        this.echo('su: Authentication failure');
                     }
                     this.pop();
                 }, {
-                    prompt: 'Password: '
+                    prompt: 'Password: ',
+                    mask: '*'
                 });
             },
             exit: function() {
                 if (isRoot) {
                     isRoot = false;
+                    username = 'user';
                     this.echo('Logged out from root user');
                 } else {
                     this.echo('Not in root mode');
@@ -229,12 +255,48 @@
                     saveFileSystem(); // Save changes to localStorage
                     this.echo(`Directory ${dirname} created.`);
                 }
+            },
+            help: function() {
+                this.echo(`
+Available commands:
+  ls      - List directory contents
+  cd      - Change directory
+  pwd     - Print working directory
+  cat     - Show file contents
+  ed      - Edit file (requires root)
+  mv      - Move/rename file (requires root)
+  rm      - Remove file (requires root)
+  mkdir   - Create directory (requires root)
+  rmdir   - Remove directory (requires root)
+  clear   - Clear terminal screen
+  su      - Switch to root user
+  exit    - Exit root user
+  help    - Show this help message
+                `);
+            },
+            clear: function() {
+                this.clear();
+            },
+            whoami: function() {
+                this.echo(isRoot ? 'root' : username);
             }
         }, {
-            greetings: 'Welcome to this playground, you can do anything here.',
+            greetings: `
+    Arch Linux \r (\l)
+    
+    Kernel $(uname -r)
+    
+    Type 'help' for available commands.
+    `,
+            prompt: function(callback) {
+                const dir = currentPath === '/home/user/' ? '~' : currentPath;
+                const promptChar = isRoot ? '#' : '$';
+                callback(`[${username}@${hostname} ${dir}]${promptChar} `);
+            },
             completion: function(string, callback) {
                 const current = getCurrentDirectory();
-                const commands = Object.keys(current);
+                const commands = [...Object.keys(current), 'ls', 'cd', 'cat', 'pwd', 'su', 
+                    'exit', 'ed', 'mv', 'rm', 'rmdir', 'mkdir', 'help', 'clear'];
                 const matches = commands.filter(command => command.startsWith(string));
                 callback(matches);
             }
